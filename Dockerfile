@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo
 
 RUN apt-get install -y xorgxrdp
+RUN apt-get install -y dbus-x11
 
 # Configure XRDP to use XFCE
 RUN echo "xfce4-session" > /etc/skel/.Xclients && \
@@ -27,12 +28,15 @@ RUN useradd -m -s /bin/bash guest && \
     echo "guest:guest" | chpasswd && \
     adduser guest sudo
 
+ENV HOME=/home/guest
+
 # Set proper ownership and permissions
 RUN chown -R guest:guest /home/guest
 
 # Create .Xclients file and set permissions
 RUN echo "xfce4-session" > /home/guest/.Xclients && \
-         chmod +x /home/guest/.Xclients
+    chmod +x /home/guest/.Xclients && \
+    ls -l /home/guest/
 
 # COPY --chown=guest:guest /etc/skel/.Xclients /home/guest/.Xclients
 
@@ -52,3 +56,4 @@ RUN chmod +x /usr/bin/start-xrdp.sh
 
 # Start XRDP and XRDP session manager
 CMD ["start-xrdp.sh"]
+

@@ -7,9 +7,15 @@ if [ ! -z "$GUEST_PASS" ]; then
     echo "guest:$GUEST_PASS" | chpasswd
 fi
 
-# Start xrdp and sesman (only one method needed)
-/etc/init.d/xrdp start
+# Start xrdp-sesman in the background
+xrdp-sesman --nodaemon &
 
-# Now keep the container running
-tail -f /dev/null
+# Start xrdp in the foreground and log outputs
+xrdp --nodaemon
+
+service xrdp start
+service xrdp-sesman start
+
+# Log file for diagnosing startup issues
+exec 2>&1 xrdp-sesman -nodaemon | tee /var/log/xrdp-sesman.log
 

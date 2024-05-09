@@ -11,16 +11,20 @@ Upgraded Ubuntu, added some more basic dev tools, especially for Python.
 Standard docker build:
 
 `docker build -t chGoodchild/xrdp .`
+`docker build --no-cache -t chGoodchild/xrdp .`
 
 On OSX on Apple Silicon, you need to run:
 
 `docker buildx build --platform=linux/amd64 -t chGoodchild/xrdp .`
 
-### How to run the container with XRDP:
+### How to run the container:
 
-`docker run -d -e GUEST_PASS='guest' -p 3389:3389 -v $(pwd)/home/guest:/home/guest --name xrdp chGoodchild/xrdp`
-`docker run --rm -it -e GUEST_PASS='guest' -p 3389:3389 -v $(pwd)/home/guest:/home/guest chGoodchild/xrdp`
+With `/home/guest` bound from the local directory:
 `docker run --rm -it -p 3389:3389 -v $(pwd)/home/guest:/home/guest chGoodchild/xrdp`
+
+Without binding `/home/guest`:
+`docker run --rm -it -p 3389:3389 chGoodchild/xrdp`
+
 
 Connect to the container using the remote desktop client on localhost:3389 and login with user guest and password guest
 
