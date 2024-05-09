@@ -6,13 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update the package repository and install essential packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xorg \
-    xfce4 \
     xrdp \
     sudo \
-    nano  # Optional: Include nano if you want to use it inside the container
+    nano
 
 RUN apt-get install -y xorgxrdp
 RUN apt-get install -y dbus-x11
+RUN apt-get install -y xfce4 xfce4-goodies
 
 # Configure XRDP to use XFCE
 RUN echo "xfce4-session" > /etc/skel/.Xclients && \
