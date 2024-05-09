@@ -29,7 +29,12 @@ RUN useradd -m -s /bin/bash guest && \
     echo "guest:guest" | chpasswd && \
     adduser guest sudo
 
+RUN chmod 1777 /tmp && chmod 0755 /run
+RUN mkdir /var/run/dbus
+ENV DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
 ENV HOME=/home/guest
+
+ENV XRDP_LOG_LEVEL=DEBUG
 
 # Set proper ownership and permissions
 RUN chown -R guest:guest /home/guest

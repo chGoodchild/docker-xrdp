@@ -8,7 +8,8 @@ fi
 dbus-uuidgen > /var/lib/dbus/machine-id
 dbus-daemon --system
 
-# Start xrdp and sesman
+# Start XRDP components
 xrdp-sesman --nodaemon &
+sleep 1
 xrdp --nodaemon
 

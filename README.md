@@ -28,3 +28,6 @@ Without binding `/home/guest`:
 
 Connect to the container using the remote desktop client on localhost:3389 and login with user guest and password guest
 
+### To free port 3389:
+
+sudo lsof -i :3389
