@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xorg \
     xfce4 \
     xrdp \
-    sudo
+    sudo \
+    nano  # Optional: Include nano if you want to use it inside the container
 
 RUN apt-get install -y xorgxrdp
 RUN apt-get install -y dbus-x11
@@ -40,16 +41,20 @@ RUN echo "xfce4-session" > /home/guest/.Xclients && \
 
 # COPY --chown=guest:guest /etc/skel/.Xclients /home/guest/.Xclients
 
+# Modify startwm.sh to start XFCE
+RUN sed -i 's|^test -x /etc/X11/Xsession && exec /etc/X11/Xsession|exec startxfce4|' /etc/xrdp/startwm.sh
+
 # Expose the RDP port
 EXPOSE 3389
 
+# Locale settings
 RUN apt-get install -y locales && \
     locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Copy the startup script
+# Copy and set permissions for the startup script
 COPY start-xrdp.sh /usr/bin/
 
 RUN chmod +x /usr/bin/start-xrdp.sh
