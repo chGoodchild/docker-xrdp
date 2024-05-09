@@ -20,9 +20,16 @@ RUN useradd -m -s /bin/bash xrdpuser && \
     echo "xrdpuser:xrdpuser" | chpasswd && \
     adduser xrdpuser sudo
 
+# Create a new user for the XRDP login
+RUN useradd -m -s /bin/bash guest && \
+    echo "guest:guest" | chpasswd && \
+    adduser guest sudo
+
 # Expose the RDP port
 EXPOSE 3389
 
-# Use the default XRDP start script
-CMD ["/etc/init.d/xrdp", "start"]
+# Copy the startup script
+COPY start-xrdp.sh /usr/bin/
 
+# Start XRDP and XRDP session manager
+CMD ["start-xrdp.sh"]

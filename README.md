@@ -19,5 +19,7 @@ On OSX on Apple Silicon, you need to run:
 ### How to run the container with XRDP:
 
 `docker run -d -e GUEST_PASS='guest' -p 3389:3389 -v $(pwd)/home/guest:/home/guest --name xrdp chGoodchild/xrdp`
+`docker run --rm -it -e GUEST_PASS='guest' -p 3389:3389 -v $(pwd)/home/guest:/home/guest chGoodchild/xrdp`
 
 Connect to the container using the remote desktop client on localhost:3389 and login with user guest and password guest
+
