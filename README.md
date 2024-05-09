@@ -6,6 +6,9 @@ on Apple Silicon.
 Forked from [satishweb/docker-xrdp](https://github.com/satishweb/docker-xrdp).
 Upgraded Ubuntu, added some more basic dev tools, especially for Python.
 
+### Setup
+`echo "xfce4-session" > /etc/skel/.Xclients`
+
 ### Building
 
 Standard docker build:
