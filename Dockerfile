@@ -10,9 +10,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     nano \
     xorgxrdp \
+    dbus \
     dbus-x11 \
     xfce4 \
     xfce4-goodies
+
+# Install and setup D-Bus
+RUN mkdir -p /etc/dbus-1/session.d /etc/dbus-1/system.d /usr/share/dbus-1/system-services /usr/share/dbus-1/services \
+    && dbus-uuidgen > /var/lib/dbus/machine-id
+
+# Copy D-Bus configuration files from host to container
+COPY dbus-config/system.conf /usr/share/dbus-1/system.conf
+COPY dbus-config/session.conf /usr/share/dbus-1/session.conf
 
 # Set proper ownership and permissions
 RUN useradd -m -s /bin/bash guest && \
