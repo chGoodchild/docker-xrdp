@@ -1,46 +1,64 @@
-IMAGE=satishweb/xrdp
-PLATFORMS=linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le
-# PLATFORMS=linux/amd64,linux/arm64
-# PLATFORMS=linux/arm64
-WORKDIR=$(shell pwd)
-XRDP_VERSION?=$(shell sudo docker run --rm --entrypoint=bash public.ecr.aws/ubuntu/ubuntu:22.04 -c \
-		"set -x; apt update >/dev/null 2>&1; \
-		apt-cache madison xrdp \
-		|cut -d \| -f 2 \
-		|sed 's/ //g'" \
-	)
+# Use Ubuntu 23.04 as the base image
+FROM ubuntu:23.04
 
-ifdef PUSH
-	EXTRA_BUILD_PARAMS = --push-images --push-git-tags
-endif
+# Set non-interactive installation mode
+ENV DEBIAN_FRONTEND noninteractive
 
-ifdef LATEST
-	EXTRA_BUILD_PARAMS += --mark-latest
-endif
+# Update the package repository and install essential packages
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    software-properties-common \
+    sudo \
+    vim \
+    nano \
+    dbus-x11 \
+    xorg \
+    xrdp \
+    xorgxrdp \
+    xfce4 \
+    xfce4-goodies \
+    xserver-xorg-video-dummy \
+    supervisor \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*deb
 
-ifdef NO-CACHE
-	EXTRA_BUILD_PARAMS += --no-cache
-endif
+# Add the guest user and set up necessary permissions
+RUN useradd -m -s /bin/bash guest \
+    && echo "guest:guest" | chpasswd \
+    && adduser guest sudo \
+    && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-ifdef LOAD
-	EXTRA_BUILD_PARAMS += --load
-endif
+# Configure XRDP to use XFCE and adjust xrdp settings for Docker compatibility
+RUN echo xfce4-session > /etc/skel/.Xclients \
+    && chmod +x /etc/skel/.Xclients \
+    && cp /etc/skel/.Xclients /home/guest/ \
+    && sed -i 's/^test -x \/etc\/X11\/Xsession && exec \/etc\/X11\/Xsession/exec startxfce4/' /etc/xrdp/startwm.sh \
+    && sed -i 's/fork=true/fork=false/g' /etc/xrdp/xrdp.ini \
+    && sed -i 's/AllowRootLogin=true/AllowRootLogin=false/g' /etc/xrdp/sesman.ini
 
-test-env:
-	echo "test-env: printing env values:"
-	echo "XRDP Version: ${XRDP_VERSION}"
-	exit 1
+# DBus and other configuration
+RUN mkdir /var/run/dbus \
+    && dbus-uuidgen > /var/lib/dbus/machine-id \
+    && chown -R messagebus:messagebus /var/run/dbus
 
-all: build
+# Expose the RDP port
+EXPOSE 3389
 
-build:
-	./build.sh \
-	  --image-name "${IMAGE}" \
-	  --platforms "${PLATFORMS}" \
-	  --work-dir "${WORKDIR}" \
-	  --git-tag "${XRDP_VERSION}" \
-	  --extra-args "--build-arg XRDP_VERSION=${XRDP_VERSION}" \
-	${EXTRA_BUILD_PARAMS}
+# Locale settings
+RUN apt-get update && apt-get install -y locales \
+    && locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
-test:
-	sudo docker build --build-arg XRDP_VERSION=${XRDP_VERSION} -t ${IMAGE}:${XRDP_VERSION} .
+# Set up supervisord to manage the XRDP and XFCE sessions
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy and set permissions for the startup script
+COPY start-xrdp.sh /usr/bin/
+RUN chmod +x /usr/bin/start-xrdp.sh
+
+# Use supervisord to start services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
